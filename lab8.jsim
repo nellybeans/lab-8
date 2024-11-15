@@ -82,7 +82,7 @@ Xregisters  vdd  0    0      ra1_[4:0]  rd1_[31:0]
   .connect werf werf_
   Xbatch1 wa4 wa3 wa2 out1 nand3 
   Xbatch2 wa1 wa0 out2 nand2 
-  Xwerf_ werf out2 werf_ and2 
+  Xwerf_ werf out1 out2 werf_ and3 
 .ends
 
 Xwerf wa[4:0] werf_ connectWerf
