@@ -6,6 +6,8 @@
 .include "8clocks.jsim"
 .include "nominal.jsim"
 .include "stdcell.jsim"
+.include "lab5.jsim"
+.include "lab6.jsim"
 
 *******************************************************************************
 * The $memory statement defines a memory device. Each memory device comes with

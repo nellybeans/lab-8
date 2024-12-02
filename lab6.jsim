@@ -1,0 +1,139 @@
+*****************************************************************************
+* Naciongayo, Maria Charmane Rose
+* Supan, Janelle Victoria 
+*****************************************************************************
+.include "8clocks.jsim"
+.include "nominal.jsim"
+.include "stdcell.jsim"
+
+*****************************************************************************
+* Previous add32 and fa subcircuits
+*****************************************************************************
+
+.subckt fa A B C sum carry 
+  x1 A B ab xor2
+  x2 C ab sum xor2 
+  x3 C ab cab nand2
+  x4 A B ab2 nand2
+  x5 cab ab2 carry nand2
+.ends
+
+.subckt add32 a[31:0] b[31:0] cin0 sum[31:0] cout[31:30]
+  xMine a[31:0] b[31:0] cout[30:0] cin0 sum[31:0] cout[31:0] fa
+.ends
+
+*****************************************************************************
+* 32-input NOR
+*****************************************************************************
+
+.subckt nor32 fas[31:0] out
+    x1 fas[31:28] n01 nor4
+    x2 fas[27:24] n02 nor4
+    x3 fas[23:20] n03 nor4
+    x4 fas[19:16] n04 nor4
+    x5 fas[15:12] n05 nor4
+    x6 fas[11:8] n06 nor4
+    x7 fas[7:4] n07 nor4
+    x8 fas[3:0] n08 nor4
+    x9 n01 n02 n03 n04 n09 nand4
+    x10 n05 n06 n07 n08 n10 nand4
+    x11 n09 n10 out nor2
+.ends
+
+*****************************************************************************
+* Join subcircuit (for connecting bus to bus)
+*****************************************************************************
+
+.subckt join a b
+    .connect a b
+.ends
+
+*****************************************************************************
+* New as32 subcircuit
+*****************************************************************************
+
+.subckt as32 a[31:0] b[31:0] op0 fas[31:0] n v z
+    xAdd a[31:0] bout[31:0] op0 fas[31:0] c31 c30 add32
+    xInvertedB b[31:0] inv[31:0] inverter
+    xConnect inv[31:0] binv[31:0] join
+    xOperation op0#32 b[31:0] binv[31:0] bout[31:0] mux2 
+    .connect fas[31] n 
+    xV c31 c30 v xor2
+    xZ fas[31:0] z nor32
+.ends
+
+*****************************************************************************
+* New cmp32 subcircuit
+*****************************************************************************
+.subckt cmp32 n v z op[2:1] fcmp[31:0]
+    xInvertedN n lordN inverter
+    .connect lordN notN
+    xNComp v n notN finalN mux2
+    xBoth z finalN finalBoth or2
+    xComparator op[1]#32 op[2]#32 0#32 z#32 finalN#32 finalBoth#32 fcmp[31:0] mux4
+.ends
+
+*****************************************************************************
+* Boolean subcircuit (bool32):
+*****************************************************************************
+.subckt bool32 a[31:0] b[31:0] op[3:0] fbool[31:0]
+    xBool a[31:0] b[31:0] op[0]#32 op[1]#32 op[2]#32 op[3]#32 fbool[31:0] mux4
+.ends
+
+*****************************************************************************
+* Shifter subcircuit (shift32):
+********************************************k*********************************
+.subckt shift32 a[31:0] b[4:0] op[1:0] fshift[31:0]
+    xINSERT op[1] 0 a31 insert mux2 
+   
+    xREVERSE op[0]#32 a[0:31] a[31:0] AF[31:0] mux2
+   
+    xMUX16 b4#32 AF[31:0] insert#16 AF[31:16] S[31:0] mux2 
+    xMUX8 b3#32 S[31:0] insert#8 S[31:8] E[31:0] mux2
+    xMUX4 b2#32 E[31:0] insert#4 E[31:4] F[31:0] mux2 
+    xMUX2 b1#32 F[31:0] insert#2 F[31:2] T[31:0] mux2
+    xMUX1 b0#32 T[31:0] insert T[31:1]  result[31:0] mux2 
+
+    xOUT op[0]#32 result[0:31] result[31:0] fshift[31:0] mux2
+.ends
+
+*****************************************************************************
+* ALU subcircuit (alu32):
+*****************************************************************************
+.subckt alu32 a[31:0] b[31:0] alufn[5:0] f[31:0]
+  xAluAs     a[31:0] b[31:0] alufn0 fAs[31:0] n v z as32
+  xAluBool   a[31:0] b[31:0] alufn[3:0] fBool[31:0] bool32
+  xAluShift  a[31:0] b[4:0] alufn[1:0] fShift[31:0] shift32
+  xAluCmp    n V Z alufn[2:1] fCmp[31:0] cmp32
+  xAluChoose alufn[4]#32 alufn[5]#32 fAs[31:0] fBool[31:0] fShift[31:0] fCmp[31:0] f[31:0] mux4 
+.ends
+
+*****************************************************************************
+* Instantiation
+*****************************************************************************
+xAluInstance a[31:0] b[31:0] alufn[5:0] f[31:0] alu32
+
+*****************************************************************************
+* Waveform Test Cases
+*****************************************************************************
+Wa a[31:0] nrz(0v,5.0v,20ns,0ns,.1ns,.1ns)
++ -1 0x55555555 0xAAAAAAAA 1 -2 -1 -1 0x55555555 0 -1 0x55555555 0
++ -1 0x55555555 0 -1 0x55555555 0 -1 0x55555555 0 1 -1 -1 0x55555555 0xAAAAAAAA -1
++ 0x55555555 0xAAAAAAAA -1 -1 15 0 -1 15 0 -1 15 0
+
+Wb b[31:0] nrz(0v,5.0v,20ns,0ns,.1ns,.1ns)
++ 1 0x55555555 0xAAAAAAAA 1 0 -1 -1 0xAAAAAAAA 0 -1 0xAAAAAAAA 0
++ -1 0xAAAAAAAA 0 -1 0xAAAAAAAA 0 -1 0xAAAAAAAA 0 31 15 0 24 24 31
++ 24 24 31 1 15 -256 1 15 -256 1 15 -256
+
+Wf alufn[5:0] nrz(0v,5.0v,60ns,0ns,.1ns,.1ns)
++ 0 1 24 30 22 26 21 32 33 35 51 53 55
+
+*****************************************************************************
+* Plots
+*****************************************************************************
+.tran 780ns
+.plot b(f[31:0])
+.plot b(a[31:0])
+.plot b(b[31:0])
+.plot b(alufn[5:0])
