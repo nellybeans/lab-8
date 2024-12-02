@@ -83,7 +83,6 @@ Xregisters  vdd  0    0      ra1_[4:0]  rd1_[31:0]
 .ends
 
 Xwerf wa[4:0] werf werf_ connectWerf
-
 *******************************************************************************
 * Xcontrol is a read-only memory (ROM) that defines what to feed into the
 * control signal lines of your final Beta circuit, depending on what opcode
@@ -144,6 +143,55 @@ Xjinstc inst[20:16] ra[4:0]     join
 Xjinstd inst[15:11] rb[4:0]     join
 Xjinste inst[15:0]  c[15:0]     join
 
+
+*******************************************************************************
+* PCSEL MUX
+* SHOULD USE A MUX4
+*******************************************************************************
+
+xPCSELMUX pcsel1#7 pcsel0#7 mux4
+
+*******************************************************************************
+* RA2SEL MUX
+*******************************************************************************
+
+xRA2SELMUX ra2sel mux2
+*******************************************************************************
+* BSEL MUX
+*******************************************************************************
+xBSELMUX bsel mux2
+
+*******************************************************************************
+* WDSEL MUX
+*******************************************************************************
+
+*******************************************************************************
+* z-NOR
+*******************************************************************************
+
+*******************************************************************************
+* RA2SEL MUX
+*******************************************************************************
+
+*******************************************************************************
+* PROGRAM COUNTER
+*******************************************************************************
+
+*******************************************************************************
+* jUMP TARGET
+*******************************************************************************
+xJUMPTARGETJOIN rd1_[8:2] jump_[8:2] join
+
+*******************************************************************************
+* BRANCH TARGET
+*******************************************************************************
+
+*******************************************************************************
+* RESET LOGIC
+*******************************************************************************
+
+
+* Temporary Signals
 *******************************************************************************
 * Temporarily connect pc[] to the predefined clocks so that we can view each
 * instruction in sequence.
@@ -161,6 +209,17 @@ Xjpc clk[8:2] pc[8:2] join
 .connect vdd clk ra1_[4:0] ra2_[4:0] wa[4:0] wd[31:0] mema[8:0] memwd[31:0]
 .connect 0 z
 
+
+
+
+
+
+
+
+
+
+
+
 *******************************************************************************
 * Plot some signals together (or else we won't have enough space in the plot
 * window)
@@ -175,7 +234,7 @@ Xjdisplayb wr_werfs[2:0]    wr werf werf_          join
 * - ra, rb, rc (taken from the rest of the instruction opcode)
 * - c (taken from the last 16 bits of the instruction opcode)
 * - control signals (i.e., output of the control logic)
-* - rd1_ (result of reading address ra1_)
+* - rd1_ (result of reading address ra1_) / also Ra
 * - rd2_ (result of reading address ra2_)
 * - wd (value being written to address wa -- but only if wr is 1)
 * - mema (address to access in main memory)
@@ -209,5 +268,7 @@ Xjdisplayb wr_werfs[2:0]    wr werf werf_          join
 .plot sd(rd2_[31:0])
 .plot sd(wd[31:0])
 .plot d(mema[8:0])
-.plot sd(memrd[31:0])
-.plot sd(memwd[31:0])
+* .plot sd(memrd[31:0])
+* .plot sd(memwd[31:0])
+.plot b(wa[4:0])
+.plot b(werf_)
