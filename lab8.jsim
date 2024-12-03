@@ -231,8 +231,8 @@ Xjcontrolb control11      ra2sel     join
 Xjcontrolc control10      bsel       join
 Xjcontrold control[9:8]   wdsel[1:0] join
 Xjcontrole control[7:2]   alufn[5:0] join
-Xjcontrolf control1       wr_1         join
-Xjcontrolg control0       werf_0       join
+Xjcontrolf control1       wr_temp         join
+Xjcontrolg control0       werf_temp       join
 
 *******************************************************************************
 * Also connect our instruction signal lines to our opcode, rc, ra, rb, and c.
@@ -302,8 +302,8 @@ Xbranch_target pc_plus_4[33:2] c15#17 c[14:0] 0 bt[33:2] dc[3:2] add32
 *******************************************************************************
 Xreset reset#32 pcsel_out[31:0] 0#32 pc_reset[31:0] mux2
 Xdreg pc_reset[31:0] clk#32 pc[31:0] dreg
-Xwr_reset reset wr_1 0 wr mux2
-Xwerf_reset reset werf_0 0 werf mux2
+Xwr_reset reset wr_temp 0 wr mux2
+Xwerf_reset reset werf_temp 0 werf mux2
 
 Wreset reset nrz(0, 5, 20ns, 0ns, 0.001ns, 0.001ns) 
 + 1 0
