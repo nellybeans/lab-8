@@ -87,8 +87,7 @@
 .subckt as32 a[31:0] b[31:0] op0 fas[31:0] n v z
     xAdd a[31:0] bout[31:0] op0 fas[31:0] c31 c30 add32
     xInvertedB b[31:0] inv[31:0] inverter
-    xConnect inv[31:0] binv[31:0] join
-    xOperation op0#32 b[31:0] binv[31:0] bout[31:0] mux2 
+    xOperation op0#32 b[31:0] inv[31:0] bout[31:0] mux2 
     .connect fas[31] n 
     xV c31 c30 v xor2
     xZ fas[31:0] z nor32
