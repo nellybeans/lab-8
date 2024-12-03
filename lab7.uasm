@@ -1,0 +1,30 @@
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+| Naciongayo, Maria Charmane Rose
+| Supan, Janelle Victoria
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+.include beta.uasm
+
+LD(r31, DATA, r0)          | r0 = first item in DATA (length of the array); This will serve as our DATA COUNTER
+
+LOOP:   BEQ(r0, STOP)      | If COUNTER = 0, jump to the STOP block
+        ADDC(r1, 4, r1)    | Add r1 = r1 + 4; This will serve as our PC Counter that iterates through memory addresses
+        LD(r1, DATA, r2)   | r2 = memory[DATA + r1]
+        ANDC(r2, 1, r3)    | Bitwise AND on r2 and 1 to check if r2 is ODD using the LSB
+        SUBC(r0, 1, r0)    | Decrement the COUNTER by 1      
+        BNE(r3, LOOP)      | If r2 is ODD, jump to the LOOP block; we will move onto the next item in the array
+        ADD(r2, r4, r4)    | Otherwise, if r2 is even, r4 += r2
+        BNE(r0, LOOP)      | If COUNTER is NOT 0, jump to the LOOP block
+        
+STOP:   ADDC(r1, 4, r1)    | Add r1 = r1 + 4; This will serve as our PC Counter that iterates through memory addresses
+        ST(r4, DATA, r1)   | memory[DATA + r1] = r4 (We are storing the sum r4 into the memory address right after the array)
+        HALT()              
+
+|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+
+DATA:   LONG(5)                  
+        LONG(3)                  
+        LONG(-5)                  
+        LONG(12)
+        LONG(-14)
+        LONG(1)
