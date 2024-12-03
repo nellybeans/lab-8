@@ -133,8 +133,8 @@ Xjcontrolb control11      ra2sel     join
 Xjcontrolc control10      bsel       join
 Xjcontrold control[9:8]   wdsel[1:0] join
 Xjcontrole control[7:2]   alufn[5:0] join
-Xjcontrolf control1       wr         join
-Xjcontrolg control0       werf       join
+* Xjcontrolf control1       wr         join
+* Xjcontrolg control0       werf       join
 
 *******************************************************************************
 * Also connect our instruction signal lines to our opcode, rc, ra, rb, and c.
@@ -146,51 +146,63 @@ Xjinstd inst[15:11] rb[4:0]     join
 Xjinste inst[15:0]  c[15:0]     join
 
 
+
 *******************************************************************************
 * PCSEL MUX
+* 00: PC+4, 01: BRANCH TARGET, 10: JUMP TARGET, 11: CURRENT ADDRESS
 *******************************************************************************
-xPCSELMUX pcsel1#7 pcsel0#7  mux4
+XPCSELMUX pcsel0#7 pcsel1#7 pc4[8:2] branch_out[8:2] jump_out[8:2] pc[8:2] pcsel_out[8:2] mux4
 
 *******************************************************************************
 * RA2SEL MUX
+* USE RB OR RC
 *******************************************************************************
 xRA2SELMUX ra2sel#5 rb[4:0] rc[4:0] ra2sel_out mux2
 
 *******************************************************************************
 * BSEL MUX
-* if bsel = 0, register. If bsel = 1, literal.
-* 2nd and 3rd node are just 16-bit literals padded to the left with 0s.
+* IF BSEL = 0, REGISTER. IF BSEL= = 1, LITERAL.
 *******************************************************************************
 xBSELMUX bsel#32 rd2_[31:0] 0#16 c[15:0] bsel_out[31:0] mux2
 
 *******************************************************************************
 * WDSEL MUX
+* 1ST LINE: COMPUTE FOR THE ADDRESS
+* 2ND LINE: SELECT THE WRITE DATA PORT; 11 is a DC condition.
 *******************************************************************************
+XALUFN rd1_[31:0] bsel_out[31:0] alufn[5:0] mema[31:0] alu32
+XWDSELMUX wdsel0#32 wdsel1#32 0#23 pc4[8:2] mema[31:0] rd1_[31:0] 0#32 wd_out[31:0] mux4
 
 *******************************************************************************
 * z-NOR
 *******************************************************************************
 
+
 *******************************************************************************
-* RA2SEL MUX
+* RESET LOGIC
 *******************************************************************************
+
 
 *******************************************************************************
 * PROGRAM COUNTER
+* 1ST LINE: RESET CURRENT PC ADDRESS TO 0 (IF NEEDED) FOR EVERY RISING CLOCK EDGE; WILL USE CLK2.
+* 2ND LINE: COMPUTING FOR NEXT LINE
 *******************************************************************************
+xPROGRAMCOUNTERDREG reset_out[8:2] clk2#7 pc[8:2] dreg
+xPROGRAMCOUNTERADD4 pc[8:2] 0#7 c_in[7:2] vdd pc4[8:2] c_in[8:2] fa
+.connect 0 pc[1:0]
 
 *******************************************************************************
-* jUMP TARGET
+* JUMP TARGET
 *******************************************************************************
-xJUMPTARGETJOIN rd1_[8:2] jump_[8:2] join
+xJUMPTARGET rd1_[8:2] jump_out[8:2] join
 
 *******************************************************************************
 * BRANCH TARGET
 *******************************************************************************
 
-*******************************************************************************
-* RESET LOGIC
-*******************************************************************************
+
+
 
 
 * Temporary Signals
@@ -210,17 +222,6 @@ Xjpc clk[8:2] pc[8:2] join
 *******************************************************************************
 .connect vdd clk ra1_[4:0] ra2_[4:0] wa[4:0] wd[31:0] mema[8:0] memwd[31:0]
 .connect 0 z
-
-
-
-
-
-
-
-
-
-
-
 
 *******************************************************************************
 * Plot some signals together (or else we won't have enough space in the plot
@@ -270,7 +271,6 @@ Xjdisplayb wr_werfs[2:0]    wr werf werf_          join
 .plot sd(rd2_[31:0])
 .plot sd(wd[31:0])
 .plot d(mema[8:0])
-* .plot sd(memrd[31:0])
-* .plot sd(memwd[31:0])
-.plot b(wa[4:0])
-.plot b(werf_)
+.plot sd(memrd[31:0])
+.plot sd(memwd[31:0])
+
